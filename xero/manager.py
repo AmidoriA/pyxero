@@ -31,7 +31,8 @@ class Manager(object):
         'get_attachments',
         'get_attachment_data',
         'put_attachment_data',
-        'put_tracking_category_options',
+        'put_tracking_category_option',
+        'save_tracking_category_option'
         )
     DATETIME_FIELDS = (
         'UpdatedDateUTC',
@@ -425,12 +426,18 @@ class Manager(object):
 
         return uri, params, 'get', None, headers, False
 
-    def _put_tracking_category_options(self, id, data, method='post'):
-        uri = '/'.join([self.base_url, self.name, id, 'Options'])
-        body = {'xml': self._prepare_data_for_save(data, 'Options')}
-        params = self.extra_params.copy()
-        return uri, params, method, body, None, False
-
     def _all(self):
         uri = '/'.join([self.base_url, self.name])
         return uri, {}, 'get', None, None, False
+
+    def _put_tracking_category_option(self, tracking_category_id, data):
+        return self.save_or_put_tracking_category_option(tracking_category_id, data, method='put')
+
+    def _save_tracking_category_option(self, tracking_category_id, data):
+        return self.save_or_put_tracking_category_option(tracking_category_id, data, method='post')
+
+    def save_or_put_tracking_category_option(self, tracking_category_id, data, method='post'):
+        uri = '/'.join([self.base_url, self.name, tracking_category_id, 'Options'])
+        body = {'xml': self._prepare_data_for_save(data, 'Options')}
+        params = self.extra_params.copy()
+        return uri, params, method, body, None, False
