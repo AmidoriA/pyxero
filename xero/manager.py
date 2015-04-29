@@ -31,6 +31,7 @@ class Manager(object):
         'get_attachments',
         'get_attachment_data',
         'put_attachment_data',
+        'put_tracking_category_options',
         )
     DATETIME_FIELDS = (
         'UpdatedDateUTC',
@@ -211,14 +212,16 @@ class Manager(object):
 
         return root_elm
 
-    def _prepare_data_for_save(self, data):
+    def _prepare_data_for_save(self, data, name=None):
+        if name == None:
+            name = self.name
         if isinstance(data, list) or isinstance(data, tuple):
-            root_elm = Element(self.name)
+            root_elm = Element(name)
             for d in data:
-                sub_elm = SubElement(root_elm, self.singular)
+                sub_elm = SubElement(root_elm, singular(name))
                 self.dict_to_xml(sub_elm, d)
         else:
-            root_elm = self.dict_to_xml(Element(self.singular), data)
+            root_elm = self.dict_to_xml(Element(singular(name)), data)
 
         return tostring(root_elm)
 
@@ -421,6 +424,12 @@ class Manager(object):
                 params['where'] = '&&'.join(filter_params)
 
         return uri, params, 'get', None, headers, False
+
+    def _put_tracking_category_options(self, id, data, method='post'):
+        uri = '/'.join([self.base_url, self.name, id, 'Options'])
+        body = {'xml': self._prepare_data_for_save(data, 'Options')}
+        params = self.extra_params.copy()
+        return uri, params, method, body, None, False
 
     def _all(self):
         uri = '/'.join([self.base_url, self.name])
