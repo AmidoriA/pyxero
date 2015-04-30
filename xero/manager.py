@@ -240,7 +240,7 @@ class Manager(object):
         if isinstance(result, tuple) or isinstance(result, list):
             return result
 
-        if isinstance(result, dict) and self.singular in result:
+        if isinstance(result, dict) and singular(name) in result:
             return result[self.singular]
 
     def _get_data(self, func):
@@ -266,7 +266,7 @@ class Manager(object):
                 dom = parseString(response.text.encode(response.encoding))
                 data = self.convert_to_dict(self.walk_dom(dom))
                 results = self._get_results(data, name)
-                
+
                 # If we're dealing with Manager.get, return a single object.
                 if singleobject and isinstance(results, list):
                     return results[0]
