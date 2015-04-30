@@ -226,10 +226,12 @@ class Manager(object):
 
         return tostring(root_elm)
 
-    def _get_results(self, data):
+    def _get_results(self, data, name=None):
         response = data['Response']
-        if self.name in response:
-            result = response[self.name]
+        if name == None:
+            name = self.name
+        if name in response:
+            result = response[name]
         elif 'Attachments' in response:
             result = response['Attachments']
         else:
@@ -250,13 +252,12 @@ class Manager(object):
             
             timeout = kwargs.pop('timeout', None)
             
-            uri, params, method, body, headers, singleobject = func(*args, **kwargs)
+            uri, params, method, body, headers, singleobject, name = func(*args, **kwargs)
 
             cert = getattr(self.credentials, 'client_cert', None)
             response = getattr(requests, method)(
                     uri, data=body, headers=headers, auth=self.credentials.oauth,
                     params=params, cert=cert, timeout=timeout)
-
             if response.status_code == 200:
                 if not response.headers['content-type'].startswith('text/xml'):
                     # return a byte string without doing any Unicode conversions
@@ -264,7 +265,8 @@ class Manager(object):
                 # parseString takes byte content, not unicode.
                 dom = parseString(response.text.encode(response.encoding))
                 data = self.convert_to_dict(self.walk_dom(dom))
-                results = self._get_results(data)
+                results = self._get_results(data, name)
+                
                 # If we're dealing with Manager.get, return a single object.
                 if singleobject and isinstance(results, list):
                     return results[0]
@@ -306,19 +308,19 @@ class Manager(object):
     def _get(self, id, headers=None):
         uri = '/'.join([self.base_url, self.name, id])
         params = self.extra_params.copy()
-        return uri, params, 'get', None, headers, True
+        return uri, params, 'get', None, headers, True, None
 
     def _get_attachments(self, id):
         """Retrieve a list of attachments associated with this Xero object."""
         uri = '/'.join([self.base_url, self.name, id, 'Attachments']) + '/'
-        return uri, {}, 'get', None, None, False
+        return uri, {}, 'get', None, None, False, None
 
     def _get_attachment_data(self, id, filename):
         """
         Retrieve the contents of a specific attachment (identified by filename).
         """
         uri = '/'.join([self.base_url, self.name, id, 'Attachments', filename])
-        return uri, {}, 'get', None, None, False
+        return uri, {}, 'get', None, None, False, None
 
     def get_attachment(self, id, filename, file):
         """
@@ -336,7 +338,7 @@ class Manager(object):
         params = self.extra_params.copy()
         if not summarize_errors:
             params['summarizeErrors'] = 'false'
-        return uri, params, method, body, headers, False
+        return uri, params, method, body, headers, False, None
 
     def _save(self, data):
         return self.save_or_put(data, method='post')
@@ -349,7 +351,7 @@ class Manager(object):
         uri = '/'.join([self.base_url, self.name, id, 'Attachments', filename])
         params = {'IncludeOnline': 'true'} if include_online else {}
         headers = {'Content-Type': content_type, 'Content-Length': len(data)}
-        return uri, params, 'put', data, headers, False
+        return uri, params, 'put', data, headers, False, None
 
     def put_attachment(self, id, filename, file, content_type, include_online=False):
         """Upload an attachment to the Xero object (from file object)."""
@@ -424,11 +426,11 @@ class Manager(object):
             if filter_params:
                 params['where'] = '&&'.join(filter_params)
 
-        return uri, params, 'get', None, headers, False
+        return uri, params, 'get', None, headers, False, None
 
     def _all(self):
         uri = '/'.join([self.base_url, self.name])
-        return uri, {}, 'get', None, None, False
+        return uri, {}, 'get', None, None, False, None
 
     def _put_tracking_category_option(self, tracking_category_id, data):
         return self.save_or_put_tracking_category_option(tracking_category_id, data, method='put')
@@ -440,4 +442,4 @@ class Manager(object):
         uri = '/'.join([self.base_url, self.name, tracking_category_id, 'Options'])
         body = {'xml': self._prepare_data_for_save(data, 'Options')}
         params = self.extra_params.copy()
-        return uri, params, method, body, None, False
+        return uri, params, method, body, None, False, 'Options'
