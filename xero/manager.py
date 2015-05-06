@@ -32,7 +32,8 @@ class Manager(object):
         'get_attachment_data',
         'put_attachment_data',
         'put_tracking_category_option',
-        'save_tracking_category_option'
+        'save_tracking_category_option',
+        'put_contact_to_group'
         )
     DATETIME_FIELDS = (
         'UpdatedDateUTC',
@@ -441,5 +442,12 @@ class Manager(object):
     def save_or_put_tracking_category_option(self, tracking_category_id, data, method='post'):
         uri = '/'.join([self.base_url, self.name, tracking_category_id, 'Options'])
         body = {'xml': self._prepare_data_for_save(data, 'Options')}
+        params = self.extra_params.copy()
+        return uri, params, method, body, None, False, 'Options'
+
+    def _put_contact_to_group(self, contact_group_id, data):
+        method = 'put'
+        uri = '/'.join([self.base_url, self.name, contact_group_id, 'Contacts'])
+        body = {'xml': self._prepare_data_for_save(data, 'Contacts')}
         params = self.extra_params.copy()
         return uri, params, method, body, None, False, 'Options'
