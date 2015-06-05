@@ -429,8 +429,10 @@ class Manager(object):
 
         return uri, params, 'get', None, headers, False, None
 
-    def _all(self):
+    def _all(self, page=None):
         uri = '/'.join([self.base_url, self.name])
+        if page != None:
+            uri += '?page=%s' % page
         return uri, {}, 'get', None, None, False, None
 
     def _put_tracking_category_option(self, tracking_category_id, data):
